@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EASTEND HUB</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+         background: #f8f9fb; color: #1a1a1a; line-height: 1.6; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  header { background: linear-gradient(135deg, #0f2864 0%, #1e3a8a 100%);
+           color: white; padding: 32px 24px; border-radius: 12px; margin-bottom: 24px;
+           box-shadow: 0 4px 12px rgba(15, 40, 100, 0.15); }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  header p { font-size: 14px; opacity: 0.85; }
+  .meta-bar { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .meta-item { background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 6px;
+               font-size: 13px; backdrop-filter: blur(10px); }
+  .meta-item b { font-weight: 600; margin-right: 6px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+  .tab { padding: 12px 20px; background: none; border: none; cursor: pointer;
+         font-size: 15px; font-weight: 500; color: #6b7280;
+         border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab:hover { color: #1e3a8a; }
+  .tab.active { color: #0f2864; border-bottom-color: #0f2864; font-weight: 700; }
+
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .card h2 { font-size: 18px; margin-bottom: 16px; color: #0f2864; font-weight: 600; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px; margin-bottom: 20px; }
+  .stat { background: white; padding: 20px; border-radius: 10px;
+          border-left: 4px solid #1e3a8a; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase;
+                letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: #0f2864; }
+  .stat-sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f3f4f6; padding: 10px 12px; text-align: left; font-weight: 600;
+       color: #374151; border-bottom: 2px solid #e5e7eb; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+  tr:hover { background: #fafafa; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
+           font-size: 11px; font-weight: 600; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-ok { background: #d1fae5; color: #065f46; }
+
+  .loading { text-align: center; padding: 48px; color: #9ca3af; }
+  .error { background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 8px; margin: 16px 0; }
+
+  .link { color: #1e3a8a; text-decoration: none; font-weight: 500; }
+  .link:hover { text-decoration: underline; }
+
+  /* Lock screen */
+  #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #0f2864; display: flex; align-items: center; justify-content: center;
+                z-index: 9999; }
+  .lock-box { background: white; padding: 48px 40px; border-radius: 12px;
+              width: 100%; max-width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .lock-box h2 { text-align: center; margin-bottom: 8px; color: #0f2864; font-size: 22px; }
+  .lock-box p { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 24px; }
+  .lock-box input { width: 100%; padding: 12px; border: 2px solid #e5e7eb;
+                    border-radius: 6px; font-size: 16px; margin-bottom: 12px; }
+  .lock-box input:focus { outline: none; border-color: #1e3a8a; }
+  .lock-box button { width: 100%; padding: 12px; background: #0f2864; color: white;
+                     border: none; border-radius: 6px; font-size: 15px; font-weight: 600;
+                     cursor: pointer; transition: background 0.2s; }
+  .lock-box button:hover { background: #1e3a8a; }
+  .lock-error { color: #dc2626; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+  #lockStyle { }
+</style>
+<style id="lockStyle">body>*:not(#lockScreen){display:none!important}</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <h2>EASTEND HUB</h2>
+    <p>접근 권한이 필요합니다</p>
+    <input type="password" id="pw" placeholder="비밀번호" autocomplete="off">
+    <button onclick="checkPw()">확인</button>
+    <div class="lock-error" id="pwErr">비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1>EASTEND HUB</h1>
+    <p>이스트엔드 매출/재고 통합 대시보드</p>
+    <div class="meta-bar" id="metaBar">
+      <span class="meta-item"><b>마지막 업데이트:</b> <span id="metaUpdated">-</span></span>
+      <span class="meta-item"><b>ETL 파일:</b> <span id="metaFile">-</span></span>
+      <span class="meta-item"><b>처리 행수:</b> <span id="metaRows">-</span></span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">종합</button>
+    <button class="tab" onclick="switchTab('products')">③ 상품별 현황</button>
+    <button class="tab" onclick="switchTab('links')">연결 대시보드</button>
+  </div>
+
+  <div class="panel active" id="panel-overview">
+    <div class="stats-grid" id="overviewStats">
+      <div class="loading">데이터 로딩 중...</div>
+    </div>
+    <div class="card">
+      <h2>채널별 거래액</h2>
+      <div id="channelTable"></div>
+    </div>
+    <div class="card">
+      <h2>브랜드별 거래액</h2>
+      <div id="brandTable"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-products">
+    <div class="card">
+      <h2>상품별 현황 (ETL 기반)</h2>
+      <div id="productTable" class="loading">로딩 중...</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-links">
+    <div class="stats-grid">
+      <div class="card">
+        <h2>① 주간 매출 대시보드</h2>
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">화/금 11시 자동 업데이트</p>
+        <a class="link" href="https://wonsosw-cmd.github.io/eastend-weekly-report/" target="_blank">→ 열기</a>
+      </div>
+      <div class="card">
+        <h2>② 일일 거래액 대시보드</h2>
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">매일 자동 업데이트</p>
+        <a class="link" href="https://wonsosw-cmd.github.io/eastend-dashboard/" target="_blank">→ 열기</a>
+      </div>
+      <div class="card">
+        <h2>④ ETL 결과물 Drive</h2>
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">xlsx 원본 다운로드</p>
+        <a class="link" id="etlFileLink" href="#" target="_blank">→ 최신 파일 열기</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var HUB_PW = 'EAST' + new Date().getFullYear() + '!';
+
+function checkPw() {
+  var input = document.getElementById('pw').value;
+  if (input === HUB_PW || sessionStorage.getItem('eastend_hub_auth') === '1') {
+    sessionStorage.setItem('eastend_hub_auth', '1');
+    unlock();
+  } else {
+    document.getElementById('pwErr').style.display = 'block';
+  }
+}
+
+function unlock() {
+  document.getElementById('lockScreen').style.display = 'none';
+  var ls; while (ls = document.getElementById('lockStyle')) ls.remove();
+  document.body.style.overflow = 'auto';
+  loadData();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function fmtNum(n) {
+  if (!n) return '0';
+  return Number(n).toLocaleString('ko-KR');
+}
+
+async function loadData() {
+  try {
+    var metaRes = await fetch('data/meta.json?t=' + Date.now());
+    if (!metaRes.ok) throw new Error('meta.json 로드 실패');
+    var meta = await metaRes.json();
+    renderMeta(meta);
+    renderOverview(meta);
+
+    var prodRes = await fetch('data/products.json?t=' + Date.now());
+    if (prodRes.ok) {
+      var products = await prodRes.json();
+      renderProducts(products);
+    } else {
+      document.getElementById('productTable').innerHTML = '<div class="error">products.json 로드 실패</div>';
+    }
+  } catch (e) {
+    document.getElementById('overviewStats').innerHTML =
+      '<div class="error">데이터 로드 실패: ' + e.message + '</div>';
+  }
+}
+
+function renderMeta(m) {
+  document.getElementById('metaUpdated').textContent = new Date(m.generatedAt).toLocaleString('ko-KR');
+  document.getElementById('metaFile').textContent = m.etlFile || '-';
+  document.getElementById('metaRows').textContent = fmtNum(m.totalRows);
+  if (m.etlFileUrl) document.getElementById('etlFileLink').href = m.etlFileUrl;
+}
+
+function renderOverview(m) {
+  var errorRate = m.totalRows ? ((m.red + m.yellow) / m.totalRows * 100).toFixed(2) : 0;
+  document.getElementById('overviewStats').innerHTML = [
+    '<div class="stat"><div class="stat-label">총 거래액</div>',
+    '<div class="stat-value">', fmtNum(Math.round(m.transTotal)), '원</div></div>',
+    '<div class="stat"><div class="stat-label">처리 행수</div>',
+    '<div class="stat-value">', fmtNum(m.totalRows), '</div></div>',
+    '<div class="stat"><div class="stat-label">Red 오류</div>',
+    '<div class="stat-value">', fmtNum(m.red), '</div>',
+    '<div class="stat-sub">', ((m.red/m.totalRows)*100).toFixed(2), '%</div></div>',
+    '<div class="stat"><div class="stat-label">Yellow 점검</div>',
+    '<div class="stat-value">', fmtNum(m.yellow), '</div>',
+    '<div class="stat-sub">', ((m.yellow/m.totalRows)*100).toFixed(2), '%</div></div>'
+  ].join('');
+
+  var chRows = Object.keys(m.byChannel).sort(function(a,b){ return m.byChannel[b] - m.byChannel[a]; })
+    .map(function(k){ return '<tr><td>' + k + '</td><td class="num">' + fmtNum(Math.round(m.byChannel[k])) + '</td></tr>'; }).join('');
+  document.getElementById('channelTable').innerHTML =
+    '<table><thead><tr><th>채널</th><th class="num">거래액</th></tr></thead><tbody>' + chRows + '</tbody></table>';
+
+  var brRows = Object.keys(m.byBrand).sort(function(a,b){ return m.byBrand[b] - m.byBrand[a]; })
+    .map(function(k){ return '<tr><td>' + k + '</td><td class="num">' + fmtNum(Math.round(m.byBrand[k])) + '</td></tr>'; }).join('');
+  document.getElementById('brandTable').innerHTML =
+    '<table><thead><tr><th>브랜드</th><th class="num">거래액</th></tr></thead><tbody>' + brRows + '</tbody></table>';
+}
+
+function renderProducts(products) {
+  products.sort(function(a,b){ return b.trans - a.trans; });
+  var rows = products.slice(0, 500).map(function(p){
+    var discount = p.tagSum ? ((1 - p.trans/p.tagSum) * 100).toFixed(1) : '-';
+    return [
+      '<tr><td>', p.pb, '</td><td>', p.name || '-', '</td>',
+      '<td>', p.brand, '</td>',
+      '<td class="num">', fmtNum(p.qty), '</td>',
+      '<td class="num">', fmtNum(Math.round(p.trans)), '</td>',
+      '<td class="num">', fmtNum(Math.round(p.costSum)), '</td>',
+      '<td class="num">', discount, '%</td></tr>'
+    ].join('');
+  }).join('');
+  document.getElementById('productTable').innerHTML =
+    '<table><thead><tr><th>품번</th><th>상품명</th><th>브랜드</th>' +
+    '<th class="num">수량</th><th class="num">거래액</th><th class="num">원가</th><th class="num">할인율</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<p style="margin-top:12px;color:#9ca3af;font-size:13px;">상위 500개 품번 표시 (전체 ' + fmtNum(products.length) + '개)</p>';
+}
+
+// 인증 체크
+document.addEventListener('DOMContentLoaded', function(){
+  if (sessionStorage.getItem('eastend_hub_auth') === '1') unlock();
+  document.getElementById('pw').addEventListener('keypress', function(e){
+    if (e.key === 'Enter') checkPw();
+  });
+});
+</script>
+</body>
+</html>
